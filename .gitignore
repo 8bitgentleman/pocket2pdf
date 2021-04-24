@@ -115,4 +115,5 @@ dmypy.json
 config.ini
 
 # pocket exports
-exports/
+pocket_exports/
+article_exports/
