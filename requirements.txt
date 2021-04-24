@@ -1,0 +1,2 @@
+beautifulsoup4==4.9.3
+readability-lxml==0.8.1
