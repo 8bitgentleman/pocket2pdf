@@ -117,3 +117,6 @@ config.ini
 # pocket exports
 pocket_exports/
 article_exports/
+
+# IDE
+.vscode
