@@ -22,7 +22,7 @@ config.read('config.ini')
 
 POCKET_CONSUMER_KEY = str(config['Pocket']['CONSUMER_KEY'])
 POCKET_ACCESS_TOKEN = str(config['Pocket']['ACCESS_TOKEN'])
-
+USER_AGENT = 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10.10; rv:75.0) Gecko/20100101 Firefox/75.0'
 
 def list_files_of_specific_format(directory, extension=None):
     '''list all files of a specific extension from a directory'''
@@ -111,7 +111,9 @@ def save_article(filename, content):
 
 def dl_article(article_id, url):
     '''Download the actual article. Uses a python port of readability.js'''
-    response = requests.get(url)
+    # set the user agent to a browser in order to prevent HTTP 406 errors
+    headers = {'User-Agent': USER_AGENT}
+    response = requests.get(url=url, headers=headers)
     response.raise_for_status()
     doc = Document(response.text)
     # make the output pretty/human readable
