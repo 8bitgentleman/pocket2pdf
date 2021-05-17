@@ -10,6 +10,9 @@ import json
 import requests
 from readability import Document
 from bs4 import BeautifulSoup as bs
+import logging
+
+logging.basicConfig(format="%(asctime)s [%(levelname)s] %(message)s", level=logging.ERROR)
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -36,7 +39,7 @@ def list_files_of_specific_format(directory, extension=None):
     return specific_files
 
 
-def save_file(pocket_data):
+def save_pocket_data(pocket_data):
     '''Saves the pocket data as a json file'''
     if not os.path.exists('pocket_exports'):
         os.makedirs('pocket_exports')
@@ -46,7 +49,7 @@ def save_file(pocket_data):
         json.dump(pocket_data, f, indent=4, separators=(',', ': '), ensure_ascii=False)
 
 
-def pocket_archived():
+def process_pocket_data():
     '''A catch all funciton for now. '''
     pocket_path = 'pocket_exports/'
 
@@ -88,35 +91,43 @@ def pocket_archived():
             # print(authors)
         except Exception:
             pass
-        # # domain = a['domain_metadata']['name']
-        # # top_image = a['top_image_url']
-        # print(title, given_url)
-        # dl_article(item_id, given_url)
+        # domain = a['domain_metadata']['name']
+        # top_image = a['top_image_url']
+        try:
+            logging.info("Downloading article '%s' from %s", title, given_url)
+            article_html = dl_article(item_id, given_url)
+            save_article('article_exports/article-' + item_id + ".html", article_html)
+        except Exception as Argument:
+            logging.exception("Error when saving article '%s' from %s", title, given_url)
+            pass
 
+def save_article(filename, content):
+    '''Save the article to disk'''
+    if not os.path.exists('article_exports'):
+        os.makedirs('article_exports')
+
+    with open(filename, 'w+') as f:
+        f.write(content)
 
 def dl_article(article_id, url):
     '''Download the actual article. Uses a python port of readability.js'''
     response = requests.get(url)
+    response.raise_for_status()
     doc = Document(response.text)
-    # pp.pprint(doc.summary())
-    if not os.path.exists('article_exports'):
-        os.makedirs('article_exports')
-
-    out_filename = 'article_exports/article-' + article_id + ".html"
     # make the output pretty/human readable
     soup = bs(doc.summary(), features="lxml")
     prettyHTML = soup.prettify()
-    with open(out_filename, 'w+') as f:
-        f.write(prettyHTML)
     return prettyHTML
-
 
 def main():
     # first export and save your pocket info
+    logging.info("Downloading data from the Pocket API")
     pocket_data = px.get_json(consumer_key=POCKET_CONSUMER_KEY, access_token=POCKET_ACCESS_TOKEN)
-    save_file(pocket_data)
+    logging.info("Saving Pocket data")
+    save_pocket_data(pocket_data)
     # then sort through the data
-    # pocket_archived()
+    logging.info("Processing Pocket data")
+    process_pocket_data()
 
 
 if __name__ == '__main__':
